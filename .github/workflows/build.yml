@@ -5,13 +5,18 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04 # Daha kararlı bir sunucu sürümüne geçtik
+    runs-on: ubuntu-22.04
     steps:
+    # 16. saniyedeki hafıza/yer yetersizliği (Exit code 2) hatasını çözmek için sunucu diskini tamamen temizliyoruz
+    - name: Sunucu Disk Alanini Genislet ve Temizle
+      run: |
+        sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc
+        sudo docker image prune --all --force
+
     - name: Sistem Paketlerini ve pmbootstrap Kur
       run: |
         sudo apt update
         sudo apt install -y python3 git openssl openssh-client kpartx util-linux python3-pip
-        # Hata vermeyen eski ve kararlı sürümü sisteme zorla kuruyoruz
         sudo pip3 install "pmbootstrap==2.3.0" --break-system-packages
 
     - name: postmarketOS Derle
@@ -19,12 +24,10 @@ jobs:
         rm -rf ~/.config/pmbootstrap
         mkdir -p ~/.config/pmbootstrap
         
-        # Ayarları sunucu kilitlemeden gömüyoruz
         sudo pmbootstrap config work /home/runner/.local/var/pmbootstrap
         sudo pmbootstrap config jobs 2
         sudo pmbootstrap config channel edge
         
-        # Tam yetkiyle arka plan kurulumunu başlatıyoruz
         sudo pmbootstrap --assume-yes init --path=/home/runner/.local/var/pmbootstrap --workaround-key-missing --mirror-alpine=http://alpinelinux.org --repository=edge --device=samsung-goyavewifi --ui=xfce4
         sudo pmbootstrap --assume-yes install --android-recovery-zip --recovery-install-partition=external_sd
         sudo pmbootstrap export
