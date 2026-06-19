@@ -7,35 +7,29 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    # Hataya sebep olan checkout adımını tamamen sildik, sunucu artık Node 20 engeline takılmayacak
-    - name: Gerekli Paketleri Yukle ve pmbootstrap Klonla
+    - name: Gerekli Sistem Paketlerini Yukle
       run: |
         sudo apt update
-        sudo apt install -y python3 git openssl openssh-client kpartx util-linux
-        
-        # Temiz başlangıç garanti ediliyor
-        rm -rf pmbootstrap
-        
-        git clone https://postmarketos.org
-        mkdir -p ~/.local/bin
-        rm -f ~/.local/bin/pmbootstrap
-        ln -s "$PWD/pmbootstrap/pmbootstrap.py" ~/.local/bin/pmbootstrap
+        sudo apt install -y python3 git openssl openssh-client kpartx util-linux python3-pip
 
     - name: postmarketOS Ayarlarini Enjekte Et ve Derle
       run: |
-        export PATH="$HOME/.local/bin:$PATH"
-        
+        # Klasör ve yetki çakışmalarını kökten önlemek için her şeyi sıfırlıyoruz
         rm -rf ~/.config/pmbootstrap
         mkdir -p ~/.config/pmbootstrap
         
-        pmbootstrap config work /home/runner/.local/var/pmbootstrap
-        pmbootstrap config jobs 2
-        pmbootstrap config channel edge
+        # pip üzerinden pmbootstrap aracını harici klasör aramadan direkt sisteme kuruyoruz
+        sudo pip3 install pmbootstrap --break-system-packages
         
-        # Tam yetkiyle sistem kurulum adımları
-        sudo env PATH="$PATH" pmbootstrap --assume-yes init --path=/home/runner/.local/var/pmbootstrap --workaround-key-missing --mirror-alpine=http://alpinelinux.org --repository=edge --device=samsung-goyavewifi --ui=xfce4
-        sudo env PATH="$PATH" pmbootstrap --assume-yes install --android-recovery-zip --recovery-install-partition=external_sd
-        sudo env PATH="$PATH" pmbootstrap export
+        # Hazır ayarları sunucuya enjekte ediyoruz
+        sudo pmbootstrap config work /home/runner/.local/var/pmbootstrap
+        sudo pmbootstrap config jobs 2
+        sudo pmbootstrap config channel edge
+        
+        # İmaj derleme ve paketleme adımları (Tam yetkiyle çalışıyor)
+        sudo pmbootstrap --assume-yes init --path=/home/runner/.local/var/pmbootstrap --workaround-key-missing --mirror-alpine=http://alpinelinux.org --repository=edge --device=samsung-goyavewifi --ui=xfce4
+        sudo pmbootstrap --assume-yes install --android-recovery-zip --recovery-install-partition=external_sd
+        sudo pmbootstrap export
         
         mkdir -p output
         sudo cp /tmp/postmarketOS-export/pmos-samsung-goyavewifi.zip output/
