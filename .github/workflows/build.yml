@@ -1,6 +1,11 @@
-name: T113 Linux Zip Builder
+name: T113-Linux-Zip-Builder
+
 on:
   workflow_dispatch:
+
+# Yeni GitHub sunucu güncellemesi (Node 24) kısıtlamasını aşmak için çevre değişkeni ekledik
+env:
+  ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: 'true'
 
 jobs:
   build:
@@ -15,14 +20,14 @@ jobs:
         sudo apt install -y python3-pip git openssl openssh-client kpartx util-linux pipx
         pipx install pmbootstrap
 
-    - name: postmarketOS Baslat ve Dosyayi Derle
+    - name: postmarketOS Ayarlarini Enjekte Et ve Derle
       run: |
         export PATH="$HOME/.local/bin:$PATH"
-        
-        # --assume-yes flag'i sayesinde sunucu hiçbir soru sormadan doğrudan konfigürasyonu tamamlar
-        pmbootstrap --assume-yes init --path=$HOME/.local/var/pmbootstrap --workaround-key-missing --mirror-alpine=http://dl-cdn.alpinelinux.org/alpine/ --repository=edge --device=samsung-goyavewifi --ui=xfce4
-        
-        # Derleme ve paketleme adımları da aynı parametreyle tetikleniyor
+        mkdir -p ~/.config/pmbootstrap
+        pmbootstrap config work /home/runner/.local/var/pmbootstrap
+        pmbootstrap config jobs 2
+        pmbootstrap config channel edge
+        pmbootstrap --assume-yes init --path=/home/runner/.local/var/pmbootstrap --workaround-key-missing --mirror-alpine=http://alpinelinux.org --repository=edge --device=samsung-goyavewifi --ui=xfce4
         pmbootstrap --assume-yes install --android-recovery-zip --recovery-install-partition=external_sd
         pmbootstrap export
         mkdir -p output
