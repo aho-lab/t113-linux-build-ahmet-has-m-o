@@ -6,38 +6,36 @@ on:
 jobs:
   build:
     runs-on: ubuntu-22.04
+    # Sunucu içindeki chroot engellerini aşmak için tam Docker ayrıcalığı veriyoruz
+    container:
+      image: ubuntu:22.04
+      options: --privileged
     steps:
-    - name: Sunucu Disk Alanini Temizle
+    - name: Sunucu İçi Gerekli Araçları Yükle
       run: |
-        sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc
-        sudo docker image prune --all --force
+        apt update
+        apt install -y python3 git openssl openssh-client kpartx util-linux python3-pip parted dosfstools binfmt-support qemu-user-static sudo
+        pip3 install "pmbootstrap==2.3.0" --break-system-packages
 
-    - name: Sistem Paketlerini Eksiksiz Yukle
-      run: |
-        sudo apt update
-        # 38. saniye hatasını çözmek için gerekli olan tüm ek kütüphaneleri (parted, dosfstools vb.) eksiksiz ekledik
-        sudo apt install -y python3 git openssl openssh-client kpartx util-linux python3-pip parted dosfstools binfmt-support qemu-user-static
-        sudo pip3 install "pmbootstrap==2.3.0" --break-system-packages
-
-    - name: postmarketOS Derle
+    - name: postmarketOS Derle ve Paketle
       run: |
         rm -rf ~/.config/pmbootstrap
         mkdir -p ~/.config/pmbootstrap
         
-        sudo pmbootstrap config work /home/runner/.local/var/pmbootstrap
-        sudo pmbootstrap config jobs 2
-        sudo pmbootstrap config channel edge
+        pmbootstrap config work /tmp/pmbootstrap_work
+        pmbootstrap config jobs 2
+        pmbootstrap config channel edge
         
-        # Tam yetki ve tüm bağımlılıklarla imaj inşası başlıyor
-        sudo pmbootstrap --assume-yes init --path=/home/runner/.local/var/pmbootstrap --workaround-key-missing --mirror-alpine=http://alpinelinux.org --repository=edge --device=samsung-goyavewifi --ui=xfce4
-        sudo pmbootstrap --assume-yes install --android-recovery-zip --recovery-install-partition=external_sd
-        sudo pmbootstrap export
+        # Sunucu kısıtlamalarını aşarak doğrudan kuruluma zorluyoruz
+        pmbootstrap --assume-yes init --path=/tmp/pmbootstrap_work --workaround-key-missing --mirror-alpine=http://alpinelinux.org --repository=edge --device=samsung-goyavewifi --ui=xfce4
+        pmbootstrap --assume-yes install --android-recovery-zip --recovery-install-partition=external_sd
+        pmbootstrap export
         
-        mkdir -p output
-        sudo cp /tmp/postmarketOS-export/pmos-samsung-goyavewifi.zip output/
+        mkdir -p /tmp/output
+        cp /tmp/postmarketOS-export/pmos-samsung-goyavewifi.zip /tmp/output/
 
     - name: Dosyayi Yukleme Bolumune Gonder
       uses: actions/upload-artifact@v4
       with:
         name: SM-T113-Linux-Kurulum-Dosyasi
-        path: output/pmos-samsung-goyavewifi.zip
+        path: /tmp/output/pmos-samsung-goyavewifi.zip
