@@ -19,10 +19,10 @@ jobs:
       run: |
         export PATH="$HOME/.local/bin:$PATH"
         
-        # yes "" | komutu sayesinde sunucu tüm sorulara otomatik enter tuşuna basarak geçer
-        yes "" | pmbootstrap init --path=$HOME/.local/var/pmbootstrap --workaround-key-missing --mirror-alpine=http://dl-cdn.alpinelinux.org/alpine/ --repository=edge --device=samsung-goyavewifi --ui=xfce4
+        # yes "" | komutu sayesinde sunucu soruları otomatik geçer
+        yes "" | pmbootstrap init --path=$HOME/.local/var/pmbootstrap --workaround-key-missing --mirror-alpine=http://alpinelinux.org --repository=edge --device=samsung-goyavewifi --ui=xfce4
         
-        # Derleme ve paketleme aşamaları
+        # Derleme aşamaları
         yes "" | pmbootstrap install --android-recovery-zip --recovery-install-partition=external_sd
         pmbootstrap export
         mkdir -p output
