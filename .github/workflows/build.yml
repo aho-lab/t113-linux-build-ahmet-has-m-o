@@ -3,10 +3,6 @@ name: T113-Linux-Zip-Builder
 on:
   workflow_dispatch:
 
-# Yeni GitHub sunucu güncellemesi (Node 24) kısıtlamasını aşmak için çevre değişkeni ekledik
-env:
-  ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: 'true'
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -14,19 +10,27 @@ jobs:
     - name: Depoyu Cek
       uses: actions/checkout@v4
 
-    - name: Gerekli Paketleri Sunucuya Yukle
+    - name: Gerekli Paketleri Yukle ve pmbootstrap Klonla
       run: |
         sudo apt update
-        sudo apt install -y python3-pip git openssl openssh-client kpartx util-linux pipx
-        pipx install pmbootstrap
+        sudo apt install -y python3 git openssl openssh-client kpartx util-linux
+        
+        # pmbootstrap aracını direkt ana kaynağından indiriyoruz (Python kısıtlamaları tamamen aşılıyor)
+        git clone https://gitlab.postmarketos.org/postmarketOS/pmbootstrap.git
+        mkdir -p ~/.local/bin
+        ln -s "$PWD/pmbootstrap/pmbootstrap.py" ~/.local/bin/pmbootstrap
 
     - name: postmarketOS Ayarlarini Enjekte Et ve Derle
       run: |
         export PATH="$HOME/.local/bin:$PATH"
+        
+        # Ayarları doğrudan dosya olarak enjekte ediyoruz, soru sorma ihtimali sıfırlanıyor
         mkdir -p ~/.config/pmbootstrap
         pmbootstrap config work /home/runner/.local/var/pmbootstrap
         pmbootstrap config jobs 2
         pmbootstrap config channel edge
+        
+        # Derleme aşaması
         pmbootstrap --assume-yes init --path=/home/runner/.local/var/pmbootstrap --workaround-key-missing --mirror-alpine=http://alpinelinux.org --repository=edge --device=samsung-goyavewifi --ui=xfce4
         pmbootstrap --assume-yes install --android-recovery-zip --recovery-install-partition=external_sd
         pmbootstrap export
