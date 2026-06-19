@@ -13,19 +13,17 @@ jobs:
       run: |
         sudo apt update
         sudo apt install -y python3-pip git openssl openssh-client kpartx util-linux pipx
-        # pipx kullanarak güvenli izolasyonda kurulum yapıyoruz, böylece 12. saniyedeki python hatası tamamen çözülüyor
         pipx install pmbootstrap
 
     - name: postmarketOS Baslat ve Dosyayi Derle
       run: |
-        # pipx ile yüklenen aracı sunucuya tanıtıyoruz
         export PATH="$HOME/.local/bin:$PATH"
         
-        # Tüm sorulara otomatik "enter" cevabı veriyoruz
-        yes "" | pmbootstrap init --path=$HOME/.local/var/pmbootstrap --workaround-key-missing --mirror-alpine=http://dl-cdn.alpinelinux.org/alpine/ --repository=edge --device=samsung-goyavewifi --ui=xfce4
+        # --assume-yes flag'i sayesinde sunucu hiçbir soru sormadan doğrudan konfigürasyonu tamamlar
+        pmbootstrap --assume-yes init --path=$HOME/.local/var/pmbootstrap --workaround-key-missing --mirror-alpine=http://dl-cdn.alpinelinux.org/alpine/ --repository=edge --device=samsung-goyavewifi --ui=xfce4
         
-        # İmaj üretme ve paketleme adımları
-        yes "" | pmbootstrap install --android-recovery-zip --recovery-install-partition=external_sd
+        # Derleme ve paketleme adımları da aynı parametreyle tetikleniyor
+        pmbootstrap --assume-yes install --android-recovery-zip --recovery-install-partition=external_sd
         pmbootstrap export
         mkdir -p output
         cp /tmp/postmarketOS-export/pmos-samsung-goyavewifi.zip output/
