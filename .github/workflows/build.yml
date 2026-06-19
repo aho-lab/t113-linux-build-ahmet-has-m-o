@@ -7,27 +7,25 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - name: Gerekli Sistem Paketlerini Yukle
+    - name: Gerekli Paketleri ve pmbootstrap Aracini Sistemden Yukle
       run: |
         sudo apt update
-        sudo apt install -y python3 git openssl openssh-client kpartx util-linux python3-pip
+        # pmbootstrap aracını direkt Ubuntu'nun kendi resmi havuzundan temizce yüklüyoruz
+        sudo apt install -y python3 git openssl openssh-client kpartx util-linux pmbootstrap
 
     - name: postmarketOS Ayarlarini Enjekte Et ve Derle
       run: |
-        # Klasör ve yetki çakışmalarını kökten önlemek için her şeyi sıfırlıyoruz
+        # Eski çakışmaları sıfırlıyoruz
         rm -rf ~/.config/pmbootstrap
         mkdir -p ~/.config/pmbootstrap
         
-        # pip üzerinden pmbootstrap aracını harici klasör aramadan direkt sisteme kuruyoruz
-        sudo pip3 install pmbootstrap --break-system-packages
-        
-        # Hazır ayarları sunucuya enjekte ediyoruz
+        # Hazır parametre ayarlarını sunucuya gömüyoruz
         sudo pmbootstrap config work /home/runner/.local/var/pmbootstrap
         sudo pmbootstrap config jobs 2
         sudo pmbootstrap config channel edge
         
-        # İmaj derleme ve paketleme adımları (Tam yetkiyle çalışıyor)
-        sudo pmbootstrap --assume-yes init --path=/home/runner/.local/var/pmbootstrap --workaround-key-missing --mirror-alpine=http://alpinelinux.org --repository=edge --device=samsung-goyavewifi --ui=xfce4
+        # Tam yetkiyle Linux imaj dosyasını (.zip) oluşturma komutları
+        sudo pmbootstrap --assume-yes init --path=/home/runner/.local/var/pmbootstrap --workaround-key-missing --mirror-alpine=http://dl-cdn.alpinelinux.org/alpine/ --repository=edge --device=samsung-goyavewifi --ui=xfce4
         sudo pmbootstrap --assume-yes install --android-recovery-zip --recovery-install-partition=external_sd
         sudo pmbootstrap export
         
