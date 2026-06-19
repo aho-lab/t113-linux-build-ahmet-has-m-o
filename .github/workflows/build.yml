@@ -14,9 +14,7 @@ jobs:
       run: |
         sudo apt update
         sudo apt install -y python3 git openssl openssh-client kpartx util-linux
-        
-        # pmbootstrap aracını direkt ana kaynağından indiriyoruz (Python kısıtlamaları tamamen aşılıyor)
-        git clone https://gitlab.postmarketos.org/postmarketOS/pmbootstrap.git
+        git clone https://postmarketos.org
         mkdir -p ~/.local/bin
         ln -s "$PWD/pmbootstrap/pmbootstrap.py" ~/.local/bin/pmbootstrap
 
@@ -24,18 +22,20 @@ jobs:
       run: |
         export PATH="$HOME/.local/bin:$PATH"
         
-        # Ayarları doğrudan dosya olarak enjekte ediyoruz, soru sorma ihtimali sıfırlanıyor
         mkdir -p ~/.config/pmbootstrap
         pmbootstrap config work /home/runner/.local/var/pmbootstrap
         pmbootstrap config jobs 2
         pmbootstrap config channel edge
         
-        # Derleme aşaması
-        pmbootstrap --assume-yes init --path=/home/runner/.local/var/pmbootstrap --workaround-key-missing --mirror-alpine=http://alpinelinux.org --repository=edge --device=samsung-goyavewifi --ui=xfce4
-        pmbootstrap --assume-yes install --android-recovery-zip --recovery-install-partition=external_sd
-        pmbootstrap export
+        # Sunucu kilitlenmesini onlemek icin tum komutlara sudo yetkisi veriyoruz
+        sudo env PATH="$PATH" pmbootstrap --assume-yes init --path=/home/runner/.local/var/pmbootstrap --workaround-key-missing --mirror-alpine=http://alpinelinux.org --repository=edge --device=samsung-goyavewifi --ui=xfce4
+        
+        # Sudo ve tam yetkiyle TWRP zip yukleme dosyasini inşa ediyoruz
+        sudo env PATH="$PATH" pmbootstrap --assume-yes install --android-recovery-zip --recovery-install-partition=external_sd
+        
+        sudo env PATH="$PATH" pmbootstrap export
         mkdir -p output
-        cp /tmp/postmarketOS-export/pmos-samsung-goyavewifi.zip output/
+        sudo cp /tmp/postmarketOS-export/pmos-samsung-goyavewifi.zip output/
 
     - name: Hazir Linux Zip Dosyasini Indirme Bolumune Gonder
       uses: actions/upload-artifact@v4
