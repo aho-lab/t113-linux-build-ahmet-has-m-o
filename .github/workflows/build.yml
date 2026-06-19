@@ -18,8 +18,12 @@ jobs:
     - name: postmarketOS Baslat ve Dosyayi Derle
       run: |
         export PATH="$HOME/.local/bin:$PATH"
-        pmbootstrap init --path=$HOME/.local/var/pmbootstrap --workaround-key-missing --mirror-alpine=http://alpinelinux.org --repository=edge --device=samsung-goyavewifi --ui=xfce4
-        pmbootstrap install --android-recovery-zip --recovery-install-partition=external_sd
+        
+        # yes "" | komutu sayesinde sunucu tüm sorulara otomatik enter tuşuna basarak geçer
+        yes "" | pmbootstrap init --path=$HOME/.local/var/pmbootstrap --workaround-key-missing --mirror-alpine=http://dl-cdn.alpinelinux.org/alpine/ --repository=edge --device=samsung-goyavewifi --ui=xfce4
+        
+        # Derleme ve paketleme aşamaları
+        yes "" | pmbootstrap install --android-recovery-zip --recovery-install-partition=external_sd
         pmbootstrap export
         mkdir -p output
         cp /tmp/postmarketOS-export/pmos-samsung-goyavewifi.zip output/
