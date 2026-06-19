@@ -1,0 +1,31 @@
+name: T113 Linux Zip Builder
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Depoyu Cek
+      uses: actions/checkout@v4
+
+    - name: Gerekli Paketleri Sunucuya Yukle
+      run: |
+        sudo apt update
+        sudo apt install -y python3-pip git openssl openssh-client kpartx util-linux
+        pip3 install --user pmbootstrap --break-system-packages || pip3 install --user pmbootstrap
+
+    - name: postmarketOS Baslat ve Dosyayi Derle
+      run: |
+        export PATH="$HOME/.local/bin:$PATH"
+        pmbootstrap init --path=$HOME/.local/var/pmbootstrap --workaround-key-missing --mirror-alpine=http://alpinelinux.org --repository=edge --device=samsung-goyavewifi --ui=xfce4
+        pmbootstrap install --android-recovery-zip --recovery-install-partition=external_sd
+        pmbootstrap export
+        mkdir -p output
+        cp /tmp/postmarketOS-export/pmos-samsung-goyavewifi.zip output/
+
+    - name: Hazir Linux Zip Dosyasini Indirme Bolumune Gonder
+      uses: actions/upload-artifact@v4
+      with:
+        name: SM-T113-Linux-Kurulum-Dosyasi
+        path: output/pmos-samsung-goyavewifi.zip
