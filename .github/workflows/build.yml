@@ -7,15 +7,13 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - name: Depoyu Cek
-      uses: actions/checkout@v4
-
+    # Hataya sebep olan checkout adımını tamamen sildik, sunucu artık Node 20 engeline takılmayacak
     - name: Gerekli Paketleri Yukle ve pmbootstrap Klonla
       run: |
         sudo apt update
         sudo apt install -y python3 git openssl openssh-client kpartx util-linux
         
-        # Klasor cakismasini (Exit code 128) engellemek icin eski kalintilari temizliyoruz
+        # Temiz başlangıç garanti ediliyor
         rm -rf pmbootstrap
         
         git clone https://postmarketos.org
@@ -27,7 +25,6 @@ jobs:
       run: |
         export PATH="$HOME/.local/bin:$PATH"
         
-        # Eski yapılandırma klasörlerini sıfırlıyoruz
         rm -rf ~/.config/pmbootstrap
         mkdir -p ~/.config/pmbootstrap
         
@@ -35,7 +32,7 @@ jobs:
         pmbootstrap config jobs 2
         pmbootstrap config channel edge
         
-        # Tüm işlemleri tam yetkiyle çalıştırıyoruz
+        # Tam yetkiyle sistem kurulum adımları
         sudo env PATH="$PATH" pmbootstrap --assume-yes init --path=/home/runner/.local/var/pmbootstrap --workaround-key-missing --mirror-alpine=http://alpinelinux.org --repository=edge --device=samsung-goyavewifi --ui=xfce4
         sudo env PATH="$PATH" pmbootstrap --assume-yes install --android-recovery-zip --recovery-install-partition=external_sd
         sudo env PATH="$PATH" pmbootstrap export
