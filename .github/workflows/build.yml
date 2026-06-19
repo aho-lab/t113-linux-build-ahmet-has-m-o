@@ -14,26 +14,32 @@ jobs:
       run: |
         sudo apt update
         sudo apt install -y python3 git openssl openssh-client kpartx util-linux
+        
+        # Klasor cakismasini (Exit code 128) engellemek icin eski kalintilari temizliyoruz
+        rm -rf pmbootstrap
+        
         git clone https://postmarketos.org
         mkdir -p ~/.local/bin
+        rm -f ~/.local/bin/pmbootstrap
         ln -s "$PWD/pmbootstrap/pmbootstrap.py" ~/.local/bin/pmbootstrap
 
     - name: postmarketOS Ayarlarini Enjekte Et ve Derle
       run: |
         export PATH="$HOME/.local/bin:$PATH"
         
+        # Eski yapılandırma klasörlerini sıfırlıyoruz
+        rm -rf ~/.config/pmbootstrap
         mkdir -p ~/.config/pmbootstrap
+        
         pmbootstrap config work /home/runner/.local/var/pmbootstrap
         pmbootstrap config jobs 2
         pmbootstrap config channel edge
         
-        # Sunucu kilitlenmesini onlemek icin tum komutlara sudo yetkisi veriyoruz
+        # Tüm işlemleri tam yetkiyle çalıştırıyoruz
         sudo env PATH="$PATH" pmbootstrap --assume-yes init --path=/home/runner/.local/var/pmbootstrap --workaround-key-missing --mirror-alpine=http://alpinelinux.org --repository=edge --device=samsung-goyavewifi --ui=xfce4
-        
-        # Sudo ve tam yetkiyle TWRP zip yukleme dosyasini inşa ediyoruz
         sudo env PATH="$PATH" pmbootstrap --assume-yes install --android-recovery-zip --recovery-install-partition=external_sd
-        
         sudo env PATH="$PATH" pmbootstrap export
+        
         mkdir -p output
         sudo cp /tmp/postmarketOS-export/pmos-samsung-goyavewifi.zip output/
 
